@@ -3,30 +3,26 @@
 #include <WebServer.h>
 
 #include "ConfigPage.h"
+#include "Connection.h"
 
 WebServer webServer(80);
-
-String ssid;
-
-String password;
 
 void setup()
 {
    Serial.begin(9600);
-   Serial.println("*** Wifi Extender Test ***\n");
-
    SPIFFS.begin();
+
+   Serial.println("*** Wifi Extender Test ***\n");
 
    Logger::setLogger(new SerialLogger());
    Logger::setLogLevel(DEBUG_FINEST);
-   
-   WiFi.mode(WIFI_AP);
 
-   // Start AP.
-   WiFi.softAP("WifiExtender", "");
+   // TODO: Load from properties file.
+   Connection::setMode(Connection::MASTER);
+   Connection::setApConfig(WifiConfig(Connection::getUniqueId(), ""));
+   Connection::setWifiConfig(WifiConfig("TostNet", "t0stn3t5"));
    
-   Serial.print("Started AP at ");
-   Serial.println(WiFi.softAPIP().toString().c_str());
+   Connection::setup();
    
    webServer.setup();
    webServer.addPage(new ConfigPage());
@@ -34,5 +30,7 @@ void setup()
 
 void loop()
 {
+   Connection::loop();
+
    webServer.loop();
 }

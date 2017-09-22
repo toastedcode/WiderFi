@@ -1,7 +1,6 @@
 #include "ConfigPage.h"
-
-extern String ssid;
-extern String password;
+#include "Connection.h"
+#include "WifiConfig.h"
 
 ConfigPage::ConfigPage() :
    Webpage("/config.html",
@@ -21,15 +20,19 @@ ConfigPage::ConfigPage() :
    // Update wifi config.
    //
 
+   WifiConfig newWifiConfig = Connection::getWifiConfig();
+
    if (Argument::hasArgument(arguments, numArguments, "wifi.ssid"))
    {
-      ssid = Argument::getArgument(arguments, numArguments, "wifi.ssid")->getStringValue();
+      newWifiConfig.ssid = Argument::getArgument(arguments, numArguments, "wifi.ssid")->getStringValue();
    }
 
    if (Argument::hasArgument(arguments, numArguments, "wifi.password"))
    {
-      password = Argument::getArgument(arguments, numArguments, "wifi.password")->getStringValue();
+      newWifiConfig.password = Argument::getArgument(arguments, numArguments, "wifi.password")->getStringValue();
    }
+
+   Connection::setWifiConfig(newWifiConfig);
 
    return (Webpage::handle(requestMethod, requestUri, arguments, numArguments, responsePath));    
 }
@@ -37,7 +40,7 @@ ConfigPage::ConfigPage() :
 void ConfigPage::replaceContent(
    String& content)
 {
-  content.replace("%ssid", ssid);
-  content.replace("%password", password);
+  content.replace("%ssid", Connection::getWifiConfig().ssid);
+  content.replace("%password", Connection::getWifiConfig().password);
   content.replace("%info", "Successfully updated.");
 }
