@@ -1,6 +1,9 @@
 #include "ConfigPage.h"
 #include "Connection.h"
+#include "Properties.hpp"
 #include "WifiConfig.h"
+
+extern Properties properties;
 
 ConfigPage::ConfigPage() :
    Webpage("/config.html",
@@ -32,7 +35,15 @@ ConfigPage::ConfigPage() :
       newWifiConfig.password = Argument::getArgument(arguments, numArguments, "wifi.password")->getStringValue();
    }
 
-   Connection::setWifiConfig(newWifiConfig);
+   if (!(newWifiConfig == Connection::getWifiConfig()))
+   {
+      Connection::setWifiConfig(newWifiConfig);
+  
+      // Update the properties file.
+      properties.set("wifi.ssid", newWifiConfig.ssid);
+      properties.set("wifi.password", newWifiConfig.password);
+      properties.save();
+   }
 
    return (Webpage::handle(requestMethod, requestUri, arguments, numArguments, responsePath));    
 }
