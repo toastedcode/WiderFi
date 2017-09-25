@@ -1,16 +1,11 @@
 #include <FS.h>
 #include <Logger.h>
-#include <Properties.h>
 #include <WebServer.h>
 
 #include "ConfigPage.h"
 #include "Connection.h"
 
-const String PROPERTIES_FILE = "/widerfi.properties";
-
 WebServer webServer(80);
-
-Properties properties;
 
 void setup()
 {
@@ -22,15 +17,11 @@ void setup()
    Logger::setLogger(new SerialLogger());
    Logger::setLogLevel(DEBUG_FINEST);
 
-   // Load properties.
-   properties.load(PROPERTIES_FILE);
-   Logger::logDebug(F("Properties:"));
-   properties.log();
-
-   // Setup our connection manager.
+   // TODO: Load from properties file.
    Connection::setMode(Connection::MASTER);
-   Connection::setApConfig(WifiConfig(Connection::getUniqueId(), properties.getString("ap.password")));
-   Connection::setWifiConfig(WifiConfig(properties.getString("wifi.password"), properties.getString("wifi.password")));
+   Connection::setApConfig(WifiConfig(Connection::getUniqueId(), ""));
+   Connection::setWifiConfig(WifiConfig("TostNet", "t0stn3t5"));
+   
    Connection::setup();
    
    webServer.setup();
