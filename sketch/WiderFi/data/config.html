@@ -5,6 +5,15 @@
    <table>
    <tr><td><b>Wifi Configuration</b></td></tr>
    <tr>
+   <td>Mode</td>
+   <td>
+      <select name="mode">
+         <option value="MASTER" %master_selected>Master</option>
+         <option value="SLAVE" %slave_selected>Slave</option>
+      </select>
+   </td>
+   </tr>
+   <tr>
       <td>SSID:</td>
       <td><input type="text" name="wifi.ssid" value="%ssid"/></td>
    </tr>

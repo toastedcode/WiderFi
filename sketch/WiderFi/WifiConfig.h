@@ -29,6 +29,13 @@ struct WifiConfig
       password = wifiConfig.password;
    }
 
+   inline bool operator==(
+      const WifiConfig& rhs)
+   {
+      return ((ssid == rhs.ssid) &&
+              (password == rhs.password));
+   }
+
    inline WifiConfig& operator=(
       const WifiConfig& rhs)
    {

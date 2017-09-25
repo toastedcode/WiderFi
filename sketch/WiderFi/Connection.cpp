@@ -5,7 +5,7 @@
 
 extern "C" void ip_napt_enable(unsigned long addr, int enable);
 
-const int Connection::RETRY_PERIOD = 10000;  // 10 seconds
+const int Connection::RETRY_PERIOD = 20000;  // 20 seconds
 
 Connection::Mode Connection::mode = Connection::SLAVE;
 
@@ -163,5 +163,39 @@ WifiConfig Connection::scanForNodes()
    }
 
    return (nodeConfig);
+}
+
+String Connection::toString(const Mode& mode)
+{
+  const String NAMES[] = 
+  {
+     "MASTER",
+     "SLAVE"
+  };
+
+  return (NAMES[mode]);
+}
+
+Connection::Mode Connection::valueOf(const String& enumName)
+{
+  Mode mode = MASTER;
+
+  static const int NUM_NAMES = 2;
+  static const String NAMES[] = 
+  {
+     "MASTER",
+     "SLAVE"
+  };
+
+  for (int i = 0; i < NUM_NAMES; i++)
+  {
+     if (enumName == NAMES[i])
+     {
+        mode = static_cast<Mode>(i);
+        break; 
+     }
+  }
+
+  return (mode);
 }
 
