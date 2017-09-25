@@ -7,7 +7,7 @@ extern "C" void ip_napt_enable(unsigned long addr, int enable);
 
 const int Connection::RETRY_PERIOD = 20000;  // 20 seconds
 
-Connection::Mode Connection::mode = Connection::SLAVE;
+Mode Connection::mode = SLAVE;
 
 WifiConfig Connection::wifiConfig;
 
@@ -18,6 +18,7 @@ long Connection::retryTime = 0;
 void Connection::setup()
 {
    WiFi.mode(WIFI_AP_STA);
+   WiFi.disconnect();
 
    startAp(apConfig.ssid, apConfig.password);
 }
@@ -45,7 +46,7 @@ void Connection::setMode(Mode mode)
    Connection::mode = mode;
 }
 
-Connection::Mode Connection::getMode()
+Mode Connection::getMode()
 {
    return (Connection::mode);
 }
@@ -128,7 +129,7 @@ String Connection::getUniqueId()
    String uniqueId = "";
    char buffer[32];
 
-   bool isMaster = Connection::getMode() == Connection::MASTER;
+   bool isMaster = Connection::getMode() == MASTER;
 
    // Retrieve the MAC address of the board.
    unsigned char mac[6] = {0, 0, 0, 0, 0, 0};
@@ -148,54 +149,52 @@ WifiConfig Connection::scanForNodes()
 {
    WifiConfig nodeConfig;
 
-   Logger::logDebug("Checking for nearby Wider-Fi nodes.");
+   Logger::logDebug("Checking for nearby Wider-Fi nodes ...");
         
    // Scan for WiderFi hotspots.
    int apCount = WiFi.scanNetworks();
+
+   int bestAp = -1;
+   int bestRssi = -1;
+   bool foundMaster = false;
   
    for (int i = 0; i < apCount; i++)
    {
-     if (WiFi.SSID(i).startsWith("WiderFi"))
-     {
-        nodeConfig.ssid = WiFi.SSID(i);
-        break;
-     }
+      if (WiFi.SSID(i).startsWith("WiderFi"))
+      {
+         if (WiFi.SSID(i).indexOf("Master") != -1)
+         {
+            if ((foundMaster == false) ||
+                (WiFi.RSSI(i) > bestRssi))
+            {
+               bestAp = i;
+               bestRssi = WiFi.RSSI(i);
+               foundMaster = true;
+            }
+         }
+         else if ((foundMaster == false) &&
+                  (WiFi.RSSI(i) > bestRssi))
+         {
+            bestAp = i;
+            bestRssi = WiFi.RSSI(i);
+         }
+      }
+   }
+
+   if (bestAp > -1)
+   {
+      Logger::logDebug(
+        "Found Wider-Fi %snode: %s (signal strength = %d)",
+        (foundMaster ? "MASTER " : ""),
+        WiFi.SSID(bestAp).c_str(),
+        bestRssi);
+    
+      nodeConfig.ssid = WiFi.SSID(bestAp); 
+   }
+   else
+   {
+      Logger::logDebug("No available nodes detected.");
    }
 
    return (nodeConfig);
 }
-
-String Connection::toString(const Mode& mode)
-{
-  const String NAMES[] = 
-  {
-     "MASTER",
-     "SLAVE"
-  };
-
-  return (NAMES[mode]);
-}
-
-Connection::Mode Connection::valueOf(const String& enumName)
-{
-  Mode mode = MASTER;
-
-  static const int NUM_NAMES = 2;
-  static const String NAMES[] = 
-  {
-     "MASTER",
-     "SLAVE"
-  };
-
-  for (int i = 0; i < NUM_NAMES; i++)
-  {
-     if (enumName == NAMES[i])
-     {
-        mode = static_cast<Mode>(i);
-        break; 
-     }
-  }
-
-  return (mode);
-}
-

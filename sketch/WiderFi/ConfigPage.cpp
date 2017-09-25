@@ -1,6 +1,7 @@
 #include "ConfigPage.h"
 #include "Connection.h"
 #include "Properties.hpp"
+#include "WiderFiDefs.h"
 #include "WifiConfig.h"
 
 extern Properties properties;
@@ -23,11 +24,11 @@ ConfigPage::ConfigPage() :
    // Update wifi config.
    //
 
-   Connection::Mode newMode = Connection::getMode();
+   Mode newMode = Connection::getMode();
 
    if (Argument::hasArgument(arguments, numArguments, "mode"))
    {
-      newMode = Connection::valueOf(Argument::getArgument(arguments, numArguments, "mode")->getStringValue());
+      newMode = valueOf(Argument::getArgument(arguments, numArguments, "mode")->getStringValue());
    }
 
    WifiConfig newWifiConfig = Connection::getWifiConfig();
@@ -47,7 +48,7 @@ ConfigPage::ConfigPage() :
    if (newMode != Connection::getMode())
    {
       Connection::setMode(newMode);
-      properties.set("mode", Connection::toString(newMode));
+      properties.set("mode", toString(newMode));
       saveProperties = true;
    }
 
@@ -71,8 +72,8 @@ ConfigPage::ConfigPage() :
 void ConfigPage::replaceContent(
    String& content)
 {
-   content.replace("%master_selected", Connection::getMode() == Connection::MASTER ? "selected" : "");
-   content.replace("%slave_selected", Connection::getMode() == Connection::SLAVE ? "selected" : "");
+   content.replace("%master_selected", Connection::getMode() == MASTER ? "selected" : "");
+   content.replace("%slave_selected", Connection::getMode() == SLAVE ? "selected" : "");
    content.replace("%ssid", Connection::getWifiConfig().ssid);
    content.replace("%password", Connection::getWifiConfig().password);
    content.replace("%info", "Successfully updated.");

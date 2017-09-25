@@ -27,7 +27,7 @@ void setup()
    Logger::logDebug(F("Properties:"));
    properties.log();
 
-   Connection::setMode(Connection::valueOf(properties.getString("mode")));
+   Connection::setMode(valueOf(properties.getString("mode")));
    Connection::setApConfig(WifiConfig(Connection::getUniqueId(), properties.getString("ap.password")));
    Connection::setWifiConfig(WifiConfig(properties.getString("wifi.ssid"), properties.getString("wifi.password")));
   

@@ -1,17 +1,12 @@
 #pragma once
 
+#include "WiderFiDefs.h"
 #include "WifiConfig.h"
 
 class Connection
 {
 
 public:
-
-   enum Mode
-   {
-      MASTER,
-      SLAVE
-   };
 
    static void setup();
 
@@ -36,10 +31,6 @@ public:
    static bool isConnected();
 
    static String getUniqueId();
-
-   static String toString(const Mode&  mode);
-
-   static Mode valueOf(const String& enumName);
    
 private:
 
