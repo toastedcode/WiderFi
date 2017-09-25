@@ -1,12 +1,15 @@
 #include "ConfigPage.h"
 #include "Connection.h"
+#include "Properties.hpp"
 #include "WifiConfig.h"
+
+extern Properties properties;
 
 ConfigPage::ConfigPage() :
    Webpage("/config.html",
            "/config.html")
 {
-   // Nothing to do here.  
+   // Nothing to do here.
 }
 
  bool ConfigPage::handle(
@@ -20,6 +23,13 @@ ConfigPage::ConfigPage() :
    // Update wifi config.
    //
 
+   Connection::Mode newMode = Connection::getMode();
+
+   if (Argument::hasArgument(arguments, numArguments, "mode"))
+   {
+      newMode = Connection::valueOf(Argument::getArgument(arguments, numArguments, "mode")->getStringValue());
+   }
+
    WifiConfig newWifiConfig = Connection::getWifiConfig();
 
    if (Argument::hasArgument(arguments, numArguments, "wifi.ssid"))
@@ -32,15 +42,38 @@ ConfigPage::ConfigPage() :
       newWifiConfig.password = Argument::getArgument(arguments, numArguments, "wifi.password")->getStringValue();
    }
 
-   Connection::setWifiConfig(newWifiConfig);
+   bool saveProperties = false;
 
-   return (Webpage::handle(requestMethod, requestUri, arguments, numArguments, responsePath));    
+   if (newMode != Connection::getMode())
+   {
+      Connection::setMode(newMode);
+      properties.set("mode", Connection::toString(newMode));
+      saveProperties = true;
+   }
+
+   if (!(newWifiConfig == Connection::getWifiConfig()))
+   {
+      Connection::setWifiConfig(newWifiConfig);
+
+      // Update the properties file.
+      properties.set("wifi.ssid", newWifiConfig.ssid);
+      properties.set("wifi.password", newWifiConfig.password);
+   }
+
+   if (saveProperties)
+   {
+      properties.save();
+   }
+
+   return (Webpage::handle(requestMethod, requestUri, arguments, numArguments, responsePath));
 }
 
 void ConfigPage::replaceContent(
    String& content)
 {
-  content.replace("%ssid", Connection::getWifiConfig().ssid);
-  content.replace("%password", Connection::getWifiConfig().password);
-  content.replace("%info", "Successfully updated.");
+   content.replace("%master_selected", Connection::getMode() == Connection::MASTER ? "selected" : "");
+   content.replace("%slave_selected", Connection::getMode() == Connection::SLAVE ? "selected" : "");
+   content.replace("%ssid", Connection::getWifiConfig().ssid);
+   content.replace("%password", Connection::getWifiConfig().password);
+   content.replace("%info", "Successfully updated.");
 }
