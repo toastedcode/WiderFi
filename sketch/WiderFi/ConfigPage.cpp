@@ -59,6 +59,7 @@ ConfigPage::ConfigPage() :
       // Update the properties file.
       properties.set("wifi.ssid", newWifiConfig.ssid);
       properties.set("wifi.password", newWifiConfig.password);
+      saveProperties = true;
    }
 
    if (saveProperties)

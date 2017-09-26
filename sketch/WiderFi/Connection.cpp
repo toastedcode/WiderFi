@@ -7,6 +7,11 @@ extern "C" void ip_napt_enable(unsigned long addr, int enable);
 
 const int Connection::RETRY_PERIOD = 20000;  // 20 seconds
 
+// Standard ESP8266 AP config.
+static const IPAddress DEFAULT_IP_ADDRESS(192, 168, 4, 1);
+static const IPAddress DEFAULT_GATEWAY(192, 168, 4, 1);
+static const IPAddress DEFAULT_SUBNET(255, 255, 255, 0);
+
 Mode Connection::mode = SLAVE;
 
 WifiConfig Connection::wifiConfig;
@@ -90,6 +95,12 @@ bool Connection::connectWifi(const String& ssid, const String& password, int con
       if (isConnected())
       {
          Logger::logDebug("Connected to wifi network %s at %s.", ssid.c_str(), WiFi.localIP().toString().c_str());
+
+         if (getUniqueGateway() != WiFi.softAPIP())
+         {
+            Logger::logDebug("Restarting AP with unique IP address.");
+            startAp(apConfig.ssid, apConfig.password);
+         }
   
          // Activate NAPT (Network address and port translation)
          ip_napt_enable(WiFi.softAPIP(), 1);
@@ -99,6 +110,8 @@ bool Connection::connectWifi(const String& ssid, const String& password, int con
       else
       {
          Logger::logDebug("Failed to connect to wifi network %s.", ssid.c_str());
+
+         WiFi.disconnect();
       }
    }
 
@@ -109,6 +122,12 @@ bool Connection::startAp(const String& ssid, const String& password)
 {
    if (ssid != "")
    {
+      // Construct a unique ip/gateway for our AP.
+      // This is important so that daisy-chained nodes can have unique addresses.
+      IPAddress gateway = getUniqueGateway();
+
+      WiFi.softAPdisconnect(true);
+      WiFi.softAPConfig(gateway, gateway, DEFAULT_SUBNET);
       WiFi.softAP(ssid.c_str(), password.c_str());
    
       Logger::logDebug("Started %s AP at %s", apConfig.ssid.c_str(), WiFi.softAPIP().toString().c_str());
@@ -143,6 +162,30 @@ String Connection::getUniqueId()
            mac[5]);
 
    return (String(buffer));          
+}
+
+IPAddress Connection::getUniqueGateway()
+{
+   IPAddress gatewayIpAddress;
+
+   if (getMode() == MASTER)
+   {
+      gatewayIpAddress = DEFAULT_GATEWAY;           
+   }
+   // SLAVE
+   else if (!isConnected())
+   {
+      gatewayIpAddress = DEFAULT_GATEWAY;       
+   }
+   else
+   {
+      // Chose an IP address by increasing subnet by 1.
+      // Ex. If connected to 192.168.4.1, then create AP 192.168.5.1
+      IPAddress localIpAddress = WiFi.localIP();
+      gatewayIpAddress = IPAddress(localIpAddress[0], localIpAddress[1], localIpAddress[2] + 1, 1);
+   }
+
+   return (gatewayIpAddress);
 }
 
 WifiConfig Connection::scanForNodes()

@@ -31,10 +31,12 @@ public:
    static bool isConnected();
 
    static String getUniqueId();
-   
-private:
+
+  private:
 
    static const int RETRY_PERIOD;
+
+   static IPAddress getUniqueGateway();
 
    static WifiConfig scanForNodes();
 
