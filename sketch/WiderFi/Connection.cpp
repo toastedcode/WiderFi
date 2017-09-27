@@ -18,6 +18,8 @@ WifiConfig Connection::wifiConfig;
 
 WifiConfig Connection::apConfig;
 
+Led* Connection::led = 0;
+
 long Connection::retryTime = 0;
 
 void Connection::setup()
@@ -26,10 +28,14 @@ void Connection::setup()
    WiFi.disconnect();
 
    startAp(apConfig.ssid, apConfig.password);
+
+   updateIndicatorLed();
 }
 
 void Connection::loop()
 {
+   static bool wasConnected = false;
+   
    if (!isConnected() && (millis() > retryTime))
    {
       if (mode == MASTER)
@@ -44,11 +50,26 @@ void Connection::loop()
 
       retryTime = millis() + RETRY_PERIOD;
    }
+
+   // Detect disconnect.
+   if (wasConnected && !isConnected())
+   {
+      Logger::logDebug("Disconnected from wifi network %s.", wifiConfig.ssid.c_str());
+      updateIndicatorLed();
+   }
+   wasConnected = isConnected();
+
+   if (led != 0)
+   {
+      led->loop();
+   }
 }
 
 void Connection::setMode(Mode mode)
 {
    Connection::mode = mode;
+   
+   updateIndicatorLed();
 }
 
 Mode Connection::getMode()
@@ -106,6 +127,8 @@ bool Connection::connectWifi(const String& ssid, const String& password, int con
          ip_napt_enable(WiFi.softAPIP(), 1);
   
          Logger::logDebug("Enabled NAPT.");
+
+         updateIndicatorLed();
       } 
       else
       {
@@ -162,6 +185,11 @@ String Connection::getUniqueId()
            mac[5]);
 
    return (String(buffer));          
+}
+
+void Connection::setIndicatorLed(Led* led)
+{
+   Connection::led = led;
 }
 
 IPAddress Connection::getUniqueGateway()
@@ -241,3 +269,37 @@ WifiConfig Connection::scanForNodes()
 
    return (nodeConfig);
 }
+
+void Connection::updateIndicatorLed()
+{
+   static const String SLAVE_DISCONNECTED_BLINK = "--__--__";
+   static const int MASTER_CONNECTED_PULSE_RATE = 3000;
+   static const String MASTER_DISCONNECTED_BLINK = "--__--__";
+   
+   if (led != 0)
+   {
+      if (isConnected())
+      {
+         if (getMode() == MASTER)
+         {
+            led->pulse(MASTER_CONNECTED_PULSE_RATE);
+         }
+         else
+         {
+            led->setBrightness(100);
+         }
+      }
+      else
+      {
+         if (getMode() == MASTER)
+         {
+            led->blink(MASTER_DISCONNECTED_BLINK);
+         }
+         else
+         {
+            led->blink(SLAVE_DISCONNECTED_BLINK);
+         }      
+      }
+   }
+}
+

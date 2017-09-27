@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Led.h"
 #include "WiderFiDefs.h"
 #include "WifiConfig.h"
 
@@ -32,6 +33,8 @@ public:
 
    static String getUniqueId();
 
+   static void setIndicatorLed(Led* led);
+
   private:
 
    static const int RETRY_PERIOD;
@@ -40,11 +43,15 @@ public:
 
    static WifiConfig scanForNodes();
 
+   static void updateIndicatorLed();
+
    static Mode mode;
 
    static WifiConfig wifiConfig;
 
    static WifiConfig apConfig;
+
+   static Led* led;
 
    static long retryTime;
 };
