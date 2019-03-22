@@ -35,6 +35,14 @@ void Connection::setup()
 void Connection::loop()
 {
    static bool wasConnected = false;
+
+   // Detect disconnect.
+   if (wasConnected && !isConnected())
+   {
+      Logger::logDebug("Disconnected from wifi network %s.", wifiConfig.ssid.c_str());
+      updateIndicatorLed();
+   }
+   wasConnected = isConnected();
    
    if (!isConnected() && (millis() > retryTime))
    {
@@ -50,14 +58,6 @@ void Connection::loop()
 
       retryTime = millis() + RETRY_PERIOD;
    }
-
-   // Detect disconnect.
-   if (wasConnected && !isConnected())
-   {
-      Logger::logDebug("Disconnected from wifi network %s.", wifiConfig.ssid.c_str());
-      updateIndicatorLed();
-   }
-   wasConnected = isConnected();
 
    if (led != 0)
    {
